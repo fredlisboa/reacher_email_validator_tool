@@ -9,13 +9,16 @@ set -e
 
 # TODO: Configure these variables.
 # Required variables:
-RCH_VERSION="v0.7.0"                          # Docker Hub tag for reacherhq/backend.
-DATABASE_URL="{{{DATABASE_URL}}}"             # URL of a Postgres database which hosts the bulk queue and results.
+RCH_VERSION=v0.7.0-beta.2                   # Docker Hub tag for reacherhq/backend.
+DATABASE_URL=postgresql://postgres:yA585z15.,.,1030@5.161.98.157:5432/reacher          # URL>
 # Optional variables
-RCH_SENTRY_DSN="{{{RCH_SENTRY_DSN}}}"         # Send bug reports to a Sentry.io dashboard.
-RCH_HEADER_SECRET="{{{RCH_HEADER_SECRET}}}"   # Protect backend from the public.
-RCH_FROM_EMAIL=reacher@gmail.com
-RCH_HELLO_NAME=gmail.com                      # Shoud ideally match the reverse DNS of your OVH cloud instance.
+# RCH_SENTRY_DSN="{{{RCH_SENTRY_DSN}}}"         # Send bug reports to a Sentry.io dashboard.
+RCH_HEADER_SECRET=d469c70a-5c11-438e-8b60-4fbaac47f499   # Protect backend from the public.
+RCH_FROM_EMAIL=frederiquelisboa@gmail.com
+RCH_HELLO_NAME=gmail.com
+RUST_LOG=info
+#RCH_AMQP_ADDR=amqp://root:yA585z15.,.,1030@5.161.98.157:5672/default
+#RCH_WORKER_CONCURRENCY=10
 
 echo "Installing Reacher backend $RCH_VERSION on host $HOSTNAME..."
 
@@ -47,15 +50,17 @@ sudo su - $USER << EOF
 
 # Stop all previous docker containers and images
 docker stop reacher_backend
-docker rm reacher_backend
 
 # Run the backend
 docker run -d \
-    -e RCH_ENABLE_BULK=1 \
+    -e RCH_ENABLE_BULK=0 \
     -e DATABASE_URL=$DATABASE_URL \
     -e RCH_BACKEND_NAME=$HOSTNAME \
     -e RCH_SENTRY_DSN=$RCH_SENTRY_DSN \
     -e RCH_HEADER_SECRET=$RCH_HEADER_SECRET \
+    -e RCH_AMQP_ADDR=$RCH_AMQP_ADDR \
+    -e RCH_WORKER_CONCURRENCY=$RCH_WORKER_CONCURRENCY \
+    -e RUST_LOG=$RUST_LOG \
     -p 80:8080 \
     --name reacher_backend \
     reacherhq/backend:$RCH_VERSION
